@@ -1,5 +1,6 @@
 package it.univaq.speedcamerafinder.ui.screen.list
 
+import android.Manifest
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,12 +12,17 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import it.univaq.speedcamerafinder.domain.model.SpeedCamera
+import it.univaq.speedcamerafinder.ui.common.PermissionGate
 
 @Composable
 fun ScreenList(
@@ -24,6 +30,31 @@ fun ScreenList(
     onItemClick: (SpeedCamera) -> Unit = {}
 ) {
     val uiState = viewModel.uiState
+
+    PermissionGate(
+        permissions = listOf(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION)
+    ) {
+        val localLifecycle = LocalLifecycleOwner.current
+        DisposableEffect(localLifecycle) {
+            val observer = LifecycleEventObserver { _, event ->
+                when(event) {
+                    Lifecycle.Event.ON_RESUME -> viewModel.onEvent(ListUiEvent.StartLocation)
+                    Lifecycle.Event.ON_PAUSE -> viewModel.onEvent(ListUiEvent.StopLocation)
+                    else -> {}
+                }
+            }
+            localLifecycle.lifecycle.addObserver(observer)
+
+            // Quando si cambia schermata fermo anche il GPS
+            onDispose {
+                localLifecycle.lifecycle.removeObserver(observer)
+                viewModel.onEvent(ListUiEvent.StopLocation)
+            }
+        }
+    }
+
     ListContent(
         items = uiState.items,
         onItemClick = onItemClick

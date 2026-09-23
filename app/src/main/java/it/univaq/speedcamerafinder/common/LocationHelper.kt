@@ -1,5 +1,6 @@
 package it.univaq.speedcamerafinder.common
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Looper
 import com.google.android.gms.location.LocationCallback
@@ -16,6 +17,8 @@ class LocationHelper (context: Context) {
         .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
         .build()
 
+    // Il permesso è già stato concesso: start() viene chiamato solo dentro PermissionGate
+    @SuppressLint("MissingPermission")
     fun start(callback: LocationCallback) {
         fusedLocationClient.requestLocationUpdates(
             locationRequest, callback, Looper.getMainLooper())

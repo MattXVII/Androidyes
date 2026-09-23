@@ -46,7 +46,7 @@ fun ScreenMap(
         ) {
 
             val localLifecycle = LocalLifecycleOwner.current
-            DisposableEffect(localLifecycle.lifecycle.currentState) {
+            DisposableEffect(localLifecycle) {
                 val observer = LifecycleEventObserver { _, event ->
                     when(event) {
                         Lifecycle.Event.ON_RESUME -> viewModel.onEvent(MapUiEvent.StartLocation)
@@ -56,8 +56,10 @@ fun ScreenMap(
                 }
                 localLifecycle.lifecycle.addObserver(observer)
 
+                // Quando si cambia schermata fermo anche il GPS
                 onDispose {
                     localLifecycle.lifecycle.removeObserver(observer)
+                    viewModel.onEvent(MapUiEvent.StopLocation)
                 }
             }
 

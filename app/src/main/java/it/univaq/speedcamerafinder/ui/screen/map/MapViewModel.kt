@@ -40,12 +40,11 @@ class MapViewModel @Inject constructor(
     private val locationCallback = object : LocationCallback() {
         override fun onLocationResult(result: LocationResult) {
             val location = result.lastLocation ?: return
+            // Scarico gli autovelox solo alla prima posizione ricevuta
+            val isFirstLocation = uiState.location == null
             uiState = uiState.copy(location = LatLng(location.latitude, location.longitude))
+            if (isFirstLocation) load(location.latitude, location.longitude)
         }
-    }
-
-    init {
-        load()
     }
 
     fun onEvent(event: MapUiEvent) {
@@ -55,9 +54,9 @@ class MapViewModel @Inject constructor(
         }
     }
 
-    private fun load() {
+    private fun load(lat: Double, lng: Double) {
         viewModelScope.launch {
-            getSpeedCamerasUseCase().collect {
+            getSpeedCamerasUseCase(lat, lng).collect {
                 uiState = when(it) {
                     is Result.Loading -> uiState.copy(isLoading = true)
                     is Result.Success -> uiState.copy(items = it.data, isLoading = false)
