@@ -11,6 +11,7 @@ import com.google.android.gms.maps.model.LatLng
 import dagger.hilt.android.lifecycle.HiltViewModel
 import it.univaq.speedcamerafinder.common.LocationHelper
 import it.univaq.speedcamerafinder.common.Result
+import it.univaq.speedcamerafinder.common.distanceFrom
 import it.univaq.speedcamerafinder.domain.model.SpeedCamera
 import it.univaq.speedcamerafinder.domain.usecase.GetSpeedCamerasUseCase
 import kotlinx.coroutines.launch
@@ -59,7 +60,11 @@ class ListViewModel @Inject constructor(
             getSpeedCamerasUseCase(lat, lng).collect {
                 uiState = when(it) {
                     is Result.Loading -> uiState.copy(isLoading = true)
-                    is Result.Success -> uiState.copy(items = it.data, isLoading = false)
+                    is Result.Success -> uiState.copy(
+                        // Dal più vicino al più lontano
+                        items = it.data.sortedBy { camera -> camera.distanceFrom(LatLng(lat, lng)) },
+                        isLoading = false
+                    )
                     is Result.Error -> uiState.copy(error = it.message, isLoading = false)
                 }
             }

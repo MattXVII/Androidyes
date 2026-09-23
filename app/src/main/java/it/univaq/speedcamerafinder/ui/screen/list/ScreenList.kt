@@ -21,6 +21,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import it.univaq.speedcamerafinder.common.distanceFrom
 import it.univaq.speedcamerafinder.domain.model.SpeedCamera
 import it.univaq.speedcamerafinder.ui.common.PermissionGate
 
@@ -56,23 +57,33 @@ fun ScreenList(
     }
 
     ListContent(
-        items = uiState.items,
+        uiState = uiState,
         onItemClick = onItemClick
     )
 }
 
 @Composable
 private fun ListContent(
-    items: List<SpeedCamera> = emptyList(),
+    uiState: ListUiState = ListUiState(),
     onItemClick: (SpeedCamera) -> Unit = {}
 ) {
+    val items = uiState.items
+    val location = uiState.location
+
+    if (location == null) {
+        CenteredMessage("In attesa della posizione...")
+        return
+    }
+    if (uiState.isLoading) {
+        CenteredMessage("Caricamento...")
+        return
+    }
+    if (uiState.error != null) {
+        CenteredMessage("Errore: ${uiState.error}")
+        return
+    }
     if (items.isEmpty()) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text("No items")
-        }
+        CenteredMessage("Nessun autovelox nelle vicinanze")
         return
     }
 
@@ -81,14 +92,25 @@ private fun ListContent(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(items.size) { index ->
+            val km = items[index].distanceFrom(location) / 1000
             ListItem(
-                title = "Autovelox",
-                subtitle = items[index].maxSpeed?.let { "Limite $it km/h" } ?: "Limite non indicato",
+                title = items[index].maxSpeed?.let { "Limite $it km/h" } ?: "Limite non indicato",
+                subtitle = "A %.1f km da te".format(km),
                 onItemClick = {
                     onItemClick(items[index])
                 }
             )
         }
+    }
+}
+
+@Composable
+private fun CenteredMessage(text: String) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(text)
     }
 }
 
