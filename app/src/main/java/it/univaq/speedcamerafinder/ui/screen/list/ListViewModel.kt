@@ -27,6 +27,7 @@ data class ListUiState (
 sealed class ListUiEvent {
     data object StartLocation: ListUiEvent()
     data object StopLocation: ListUiEvent()
+    data object Refresh: ListUiEvent()
 }
 
 @HiltViewModel
@@ -52,6 +53,8 @@ class ListViewModel @Inject constructor(
         when(event) {
             is ListUiEvent.StartLocation -> locationHelper.start(locationCallback)
             is ListUiEvent.StopLocation -> locationHelper.stop(locationCallback)
+            // Riscarico gli autovelox intorno alla posizione attuale
+            is ListUiEvent.Refresh -> uiState.location?.let { load(it.latitude, it.longitude) }
         }
     }
 
@@ -59,7 +62,7 @@ class ListViewModel @Inject constructor(
         viewModelScope.launch {
             getSpeedCamerasUseCase(lat, lng).collect {
                 uiState = when(it) {
-                    is Result.Loading -> uiState.copy(isLoading = true)
+                    is Result.Loading -> uiState.copy(isLoading = true, error = null)
                     is Result.Success -> uiState.copy(
                         // Dal più vicino al più lontano
                         items = it.data.sortedBy { camera -> camera.distanceFrom(LatLng(lat, lng)) },

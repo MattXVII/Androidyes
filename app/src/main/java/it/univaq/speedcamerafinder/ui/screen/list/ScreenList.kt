@@ -5,14 +5,17 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -78,17 +81,34 @@ fun ScreenList(
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // Con il permesso già concesso il tasto non è più cliccabile
-        Button(
-            onClick = { permissionRequests++ },
-            enabled = !isLocationGranted,
-            modifier = Modifier.fillMaxWidth().padding(16.dp)
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Icon(Icons.Default.MyLocation, contentDescription = null)
-            Text(
-                text = if (isLocationGranted) "Posizione attiva" else "Attiva posizione",
-                modifier = Modifier.padding(start = 8.dp)
-            )
+            // Con il permesso già concesso il tasto non è più cliccabile
+            Button(
+                onClick = { permissionRequests++ },
+                enabled = !isLocationGranted,
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(Icons.Default.MyLocation, contentDescription = null)
+                Text(
+                    text = if (isLocationGranted) "Posizione attiva" else "Attiva posizione",
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
+
+            Button(
+                onClick = { viewModel.onEvent(ListUiEvent.Refresh) },
+                enabled = uiState.location != null && !uiState.isLoading,
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(Icons.Default.Refresh, contentDescription = null)
+                Text(
+                    text = "Aggiorna",
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
         }
 
         ListContent(
@@ -120,13 +140,22 @@ private fun ListContent(
         CenteredMessage("Caricamento...")
         return
     }
-    if (uiState.error != null) {
+    if (items.isEmpty() && uiState.error != null) {
         CenteredMessage("Errore: ${uiState.error}")
         return
     }
     if (items.isEmpty()) {
         CenteredMessage("Nessun autovelox nelle vicinanze")
         return
+    }
+
+    // Download fallito ma ci sono i dati salvati in Room: li mostro avvisando l'utente
+    if (uiState.error != null) {
+        Text(
+            text = "Dati non aggiornati (${uiState.error}). Premi Aggiorna per riprovare.",
+            color = MaterialTheme.colorScheme.error,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
     }
 
     LazyColumn(

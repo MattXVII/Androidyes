@@ -24,12 +24,14 @@ class GetSpeedCamerasUseCase @Inject constructor(
             localRepository.save(remoteData)
         }
 
-        // Se la rete non risponde mostro gli ultimi autovelox salvati in Room
+        // Se la rete non risponde mostro comunque gli ultimi autovelox salvati in Room
         val localData = localRepository.getAll()
-        if (download.isFailure && localData.isEmpty()) {
-            emit(Result.Error(download.exceptionOrNull()?.message ?: "Unknown error"))
-        } else {
+        if (download.isSuccess || localData.isNotEmpty()) {
             emit(Result.Success(localData))
+        }
+        // ...ma segnalo anche l'errore, così la UI sa che i dati non sono aggiornati
+        if (download.isFailure) {
+            emit(Result.Error(download.exceptionOrNull()?.message ?: "Unknown error"))
         }
     }
 }
