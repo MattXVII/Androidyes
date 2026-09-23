@@ -15,12 +15,12 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberUpdatedMarkerState
-import it.univaq.speedcamerafinder.domain.model.User
+import it.univaq.speedcamerafinder.domain.model.SpeedCamera
 import it.univaq.speedcamerafinder.ui.common.PermissionGate
 
 @Composable
 fun ScreenMap(
-    onItemClick: (User) -> Unit = {},
+    onItemClick: (SpeedCamera) -> Unit = {},
     viewModel: MapViewModel = hiltViewModel()
 ) {
     val uiState = viewModel.uiState
@@ -28,13 +28,13 @@ fun ScreenMap(
     GoogleMap (
         modifier = Modifier.fillMaxSize(),
     ){
-        uiState.items.forEach { user ->
+        uiState.items.forEach { camera ->
             Marker(
-                state = rememberUpdatedMarkerState(LatLng(user.lat, user.lng)),
-                title = user.name,
-                snippet = user.city,
+                state = rememberUpdatedMarkerState(LatLng(camera.lat, camera.lng)),
+                title = camera.name ?: "Autovelox",
+                snippet = camera.maxSpeed?.let { "Limite $it km/h" },
                 onInfoWindowClick = {
-                    onItemClick(user)
+                    onItemClick(camera)
                 }
             )
         }

@@ -7,20 +7,20 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import it.univaq.speedcamerafinder.common.Result
-import it.univaq.speedcamerafinder.domain.model.User
-import it.univaq.speedcamerafinder.domain.usecase.GetUsersUseCase
+import it.univaq.speedcamerafinder.domain.model.SpeedCamera
+import it.univaq.speedcamerafinder.domain.usecase.GetSpeedCamerasUseCase
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class ListUiState (
-    val items: List<User> = emptyList(),
+    val items: List<SpeedCamera> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null
 )
 
 @HiltViewModel
 class ListViewModel @Inject constructor(
-    private val getUsersUseCase: GetUsersUseCase
+    private val getSpeedCamerasUseCase: GetSpeedCamerasUseCase
 ): ViewModel() {
 
     var uiState by mutableStateOf(ListUiState())
@@ -32,7 +32,7 @@ class ListViewModel @Inject constructor(
 
     private fun load() {
         viewModelScope.launch {
-            getUsersUseCase().collect {
+            getSpeedCamerasUseCase().collect {
                 uiState = when(it) {
                     is Result.Loading -> uiState.copy(isLoading = true)
                     is Result.Success -> uiState.copy(items = it.data, isLoading = false)

@@ -11,13 +11,13 @@ import com.google.android.gms.maps.model.LatLng
 import dagger.hilt.android.lifecycle.HiltViewModel
 import it.univaq.speedcamerafinder.common.LocationHelper
 import it.univaq.speedcamerafinder.common.Result
-import it.univaq.speedcamerafinder.domain.model.User
-import it.univaq.speedcamerafinder.domain.usecase.GetUsersUseCase
+import it.univaq.speedcamerafinder.domain.model.SpeedCamera
+import it.univaq.speedcamerafinder.domain.usecase.GetSpeedCamerasUseCase
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class MapUiState (
-    val items: List<User> = emptyList(),
+    val items: List<SpeedCamera> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
     val location: LatLng? = null
@@ -30,7 +30,7 @@ sealed class MapUiEvent {
 
 @HiltViewModel
 class MapViewModel @Inject constructor(
-    private val getUsersUseCase: GetUsersUseCase,
+    private val getSpeedCamerasUseCase: GetSpeedCamerasUseCase,
     private val locationHelper: LocationHelper
 ): ViewModel() {
 
@@ -57,7 +57,7 @@ class MapViewModel @Inject constructor(
 
     private fun load() {
         viewModelScope.launch {
-            getUsersUseCase().collect {
+            getSpeedCamerasUseCase().collect {
                 uiState = when(it) {
                     is Result.Loading -> uiState.copy(isLoading = true)
                     is Result.Success -> uiState.copy(items = it.data, isLoading = false)

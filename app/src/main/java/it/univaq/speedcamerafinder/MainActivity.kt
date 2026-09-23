@@ -20,7 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
 import dagger.hilt.android.AndroidEntryPoint
-import it.univaq.speedcamerafinder.domain.model.User
+import it.univaq.speedcamerafinder.domain.model.SpeedCamera
 import it.univaq.speedcamerafinder.ui.screen.detail.ScreenDetail
 import it.univaq.speedcamerafinder.ui.screen.list.ScreenList
 import it.univaq.speedcamerafinder.ui.screen.map.ScreenMap
@@ -28,7 +28,7 @@ import it.univaq.speedcamerafinder.ui.theme.SpeedCameraFinderTheme
 
 data object ListScreen
 data object MapScreen
-data class DetailScreen(val user: User)
+data class DetailScreen(val camera: SpeedCamera)
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -90,8 +90,8 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                             entry<DetailScreen> {
-                                val user = it.user
-                                ScreenDetail(user)
+                                val camera = it.camera
+                                ScreenDetail(camera)
                             }
                         }
                     )

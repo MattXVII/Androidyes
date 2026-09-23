@@ -1,46 +1,43 @@
 package it.univaq.speedcamerafinder.data.local
 
-import it.univaq.speedcamerafinder.data.local.entities.UserEntity
-import it.univaq.speedcamerafinder.domain.model.User
+import it.univaq.speedcamerafinder.data.local.entities.SpeedCameraEntity
+import it.univaq.speedcamerafinder.domain.model.SpeedCamera
 import it.univaq.speedcamerafinder.domain.repositories.LocalRepository
-import kotlinx.coroutines.Dispatchers
 import javax.inject.Inject
 
-private fun User.toEntity() = UserEntity(
-    name = name,
-    username = username,
-    email = email,
-    city = city,
+private fun SpeedCamera.toEntity() = SpeedCameraEntity(
+    id = id,
     lat = lat,
-    lng = lng
+    lng = lng,
+    maxSpeed = maxSpeed,
+    direction = direction,
+    name = name
 )
 
-private fun UserEntity.toDomain() = User(
+private fun SpeedCameraEntity.toDomain() = SpeedCamera(
     id = id,
-    name = name,
-    username = username,
-    email = email,
-    city = city,
     lat = lat,
-    lng = lng
+    lng = lng,
+    maxSpeed = maxSpeed,
+    direction = direction,
+    name = name
 )
 
 class RoomLocalRepository @Inject constructor(
-    private val userDao: UserDao
+    private val speedCameraDao: SpeedCameraDao
 ): LocalRepository {
 
-    override suspend fun save(data: List<User>) {
-        with(Dispatchers.IO) {
-            clear()
-            userDao.insert(data.map { it.toEntity() })
-        }
+    // Room esegue già le funzioni suspend del DAO su un thread di background
+    override suspend fun save(data: List<SpeedCamera>) {
+        clear()
+        speedCameraDao.insert(data.map { it.toEntity() })
     }
 
-    override suspend fun getAll(): List<User> {
-        return userDao.getAll().map { it.toDomain() }
+    override suspend fun getAll(): List<SpeedCamera> {
+        return speedCameraDao.getAll().map { it.toDomain() }
     }
 
     override suspend fun clear() {
-        userDao.clear()
+        speedCameraDao.clear()
     }
 }

@@ -1,26 +1,37 @@
 package it.univaq.speedcamerafinder.ui.screen.detail
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import it.univaq.speedcamerafinder.domain.model.User
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import it.univaq.speedcamerafinder.domain.model.SpeedCamera
 
 @Composable
 fun ScreenDetail(
-    user: User
+    camera: SpeedCamera
 ) {
-    Column {
+    Column(
+        modifier = Modifier.padding(16.dp)
+    ) {
         Text(
-            text = user.name,
+            text = camera.name ?: "Autovelox",
+            style = typography.titleLarge
         )
         Text(
-            text = user.city,
+            text = camera.maxSpeed?.let { "Limite: $it km/h" } ?: "Limite non indicato",
         )
         Text(
-            text = user.username,
+            text = camera.direction?.let { "Direzione: $it°" } ?: "Direzione non indicata",
         )
         Text(
-            text = user.email,
+            text = "Coordinate: ${camera.lat}, ${camera.lng}",
+        )
+        Text(
+            text = "ID OpenStreetMap: ${camera.id}",
+            style = typography.bodySmall
         )
     }
 }

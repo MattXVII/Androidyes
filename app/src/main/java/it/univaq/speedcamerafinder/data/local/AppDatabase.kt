@@ -2,10 +2,10 @@ package it.univaq.speedcamerafinder.data.local
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
-import it.univaq.speedcamerafinder.data.local.entities.UserEntity
+import it.univaq.speedcamerafinder.data.local.entities.SpeedCameraEntity
 
-@Database(entities = [UserEntity::class], version = 1)
+@Database(entities = [SpeedCameraEntity::class], version = 1, exportSchema = false)
 abstract class AppDatabase: RoomDatabase() {
 
-    abstract fun userDao(): UserDao
+    abstract fun speedCameraDao(): SpeedCameraDao
 }

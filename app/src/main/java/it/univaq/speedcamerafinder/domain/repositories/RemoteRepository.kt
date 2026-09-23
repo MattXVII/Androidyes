@@ -1,8 +1,8 @@
 package it.univaq.speedcamerafinder.domain.repositories
 
-import it.univaq.speedcamerafinder.domain.model.User
+import it.univaq.speedcamerafinder.domain.model.SpeedCamera
 
 interface RemoteRepository {
 
-    suspend fun downloadData(): List<User>
+    suspend fun downloadData(): List<SpeedCamera>
 }

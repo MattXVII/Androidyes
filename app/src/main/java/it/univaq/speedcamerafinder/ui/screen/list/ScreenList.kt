@@ -16,12 +16,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import it.univaq.speedcamerafinder.domain.model.User
+import it.univaq.speedcamerafinder.domain.model.SpeedCamera
 
 @Composable
 fun ScreenList(
     viewModel: ListViewModel = hiltViewModel(),
-    onItemClick: (User) -> Unit = {}
+    onItemClick: (SpeedCamera) -> Unit = {}
 ) {
     val uiState = viewModel.uiState
     ListContent(
@@ -32,8 +32,8 @@ fun ScreenList(
 
 @Composable
 private fun ListContent(
-    items: List<User> = emptyList(),
-    onItemClick: (User) -> Unit = {}
+    items: List<SpeedCamera> = emptyList(),
+    onItemClick: (SpeedCamera) -> Unit = {}
 ) {
     if (items.isEmpty()) {
         Box(
@@ -51,8 +51,8 @@ private fun ListContent(
     ) {
         items(items.size) { index ->
             ListItem(
-                title = items[index].name,
-                subtitle = items[index].city,
+                title = items[index].name ?: "Autovelox",
+                subtitle = items[index].maxSpeed?.let { "Limite $it km/h" } ?: "Limite non indicato",
                 onItemClick = {
                     onItemClick(items[index])
                 }

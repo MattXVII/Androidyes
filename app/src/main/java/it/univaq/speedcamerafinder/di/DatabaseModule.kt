@@ -28,7 +28,7 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideUserDao(database: AppDatabase) = database.userDao()
+    fun provideSpeedCameraDao(database: AppDatabase) = database.speedCameraDao()
 }
 
 @Module
