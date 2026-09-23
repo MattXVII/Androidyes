@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "JsonPlaceholder"
+rootProject.name = "SpeedCameraFinder"
 include(":app")

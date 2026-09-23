@@ -19,13 +19,13 @@ plugins {
 }
 
 android {
-    namespace = "it.univaq.jsonplaceholder"
+    namespace = "it.univaq.speedcamerafinder"
     compileSdk {
         version = release(36)
     }
 
     defaultConfig {
-        applicationId = "it.univaq.jsonplaceholder"
+        applicationId = "it.univaq.speedcamerafinder"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
