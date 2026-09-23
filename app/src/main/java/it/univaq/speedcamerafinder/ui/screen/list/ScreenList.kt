@@ -51,7 +51,7 @@ private fun ListContent(
     ) {
         items(items.size) { index ->
             ListItem(
-                title = items[index].name ?: "Autovelox",
+                title = "Autovelox",
                 subtitle = items[index].maxSpeed?.let { "Limite $it km/h" } ?: "Limite non indicato",
                 onItemClick = {
                     onItemClick(items[index])

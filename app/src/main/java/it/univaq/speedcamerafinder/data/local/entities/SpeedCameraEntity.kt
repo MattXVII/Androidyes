@@ -9,6 +9,5 @@ data class SpeedCameraEntity(
     val lat: Double,
     val lng: Double,
     val maxSpeed: Int?,
-    val direction: String?,
-    val name: String?
+    val direction: String?
 )

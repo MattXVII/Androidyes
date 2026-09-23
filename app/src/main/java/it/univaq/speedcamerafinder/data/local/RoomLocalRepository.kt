@@ -10,8 +10,7 @@ private fun SpeedCamera.toEntity() = SpeedCameraEntity(
     lat = lat,
     lng = lng,
     maxSpeed = maxSpeed,
-    direction = direction,
-    name = name
+    direction = direction
 )
 
 private fun SpeedCameraEntity.toDomain() = SpeedCamera(
@@ -19,8 +18,7 @@ private fun SpeedCameraEntity.toDomain() = SpeedCamera(
     lat = lat,
     lng = lng,
     maxSpeed = maxSpeed,
-    direction = direction,
-    name = name
+    direction = direction
 )
 
 class RoomLocalRepository @Inject constructor(

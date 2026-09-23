@@ -31,7 +31,7 @@ fun ScreenMap(
         uiState.items.forEach { camera ->
             Marker(
                 state = rememberUpdatedMarkerState(LatLng(camera.lat, camera.lng)),
-                title = camera.name ?: "Autovelox",
+                title = "Autovelox",
                 snippet = camera.maxSpeed?.let { "Limite $it km/h" },
                 onInfoWindowClick = {
                     onItemClick(camera)

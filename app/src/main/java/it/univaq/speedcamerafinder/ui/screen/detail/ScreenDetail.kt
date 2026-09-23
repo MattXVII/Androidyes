@@ -17,7 +17,7 @@ fun ScreenDetail(
         modifier = Modifier.padding(16.dp)
     ) {
         Text(
-            text = camera.name ?: "Autovelox",
+            text = "Autovelox",
             style = typography.titleLarge
         )
         Text(

@@ -11,7 +11,6 @@ import it.univaq.speedcamerafinder.domain.repositories.RemoteRepository
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 @Module
@@ -28,7 +27,6 @@ object RemoteModule {
                     .build()
             )
         }
-        .readTimeout(30, TimeUnit.SECONDS)
         .build()
 
     @Provides @Singleton
