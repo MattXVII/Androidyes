@@ -9,10 +9,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -21,55 +30,88 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import it.univaq.speedcamerafinder.common.distanceFrom
 import it.univaq.speedcamerafinder.domain.model.SpeedCamera
 import it.univaq.speedcamerafinder.ui.common.PermissionGate
 
+private val LOCATION_PERMISSIONS = listOf(
+    Manifest.permission.ACCESS_FINE_LOCATION,
+    Manifest.permission.ACCESS_COARSE_LOCATION
+)
+
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun ScreenList(
     viewModel: ListViewModel = hiltViewModel(),
     onItemClick: (SpeedCamera) -> Unit = {}
 ) {
     val uiState = viewModel.uiState
+    val permissionState = rememberMultiplePermissionsState(LOCATION_PERMISSIONS)
+    val isLocationGranted = permissionState.permissions.any { it.status.isGranted }
 
-    PermissionGate(
-        permissions = listOf(
-            Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.ACCESS_COARSE_LOCATION)
-    ) {
-        val localLifecycle = LocalLifecycleOwner.current
-        DisposableEffect(localLifecycle) {
-            val observer = LifecycleEventObserver { _, event ->
-                when(event) {
-                    Lifecycle.Event.ON_RESUME -> viewModel.onEvent(ListUiEvent.StartLocation)
-                    Lifecycle.Event.ON_PAUSE -> viewModel.onEvent(ListUiEvent.StopLocation)
-                    else -> {}
+    // Ogni click sul tasto ricrea PermissionGate, che quindi rifà la richiesta
+    var permissionRequests by rememberSaveable { mutableIntStateOf(0) }
+
+    key(permissionRequests) {
+        PermissionGate(permissions = LOCATION_PERMISSIONS) {
+            val localLifecycle = LocalLifecycleOwner.current
+            DisposableEffect(localLifecycle) {
+                val observer = LifecycleEventObserver { _, event ->
+                    when(event) {
+                        Lifecycle.Event.ON_RESUME -> viewModel.onEvent(ListUiEvent.StartLocation)
+                        Lifecycle.Event.ON_PAUSE -> viewModel.onEvent(ListUiEvent.StopLocation)
+                        else -> {}
+                    }
                 }
-            }
-            localLifecycle.lifecycle.addObserver(observer)
+                localLifecycle.lifecycle.addObserver(observer)
 
-            // Quando si cambia schermata fermo anche il GPS
-            onDispose {
-                localLifecycle.lifecycle.removeObserver(observer)
-                viewModel.onEvent(ListUiEvent.StopLocation)
+                // Quando si cambia schermata fermo anche il GPS
+                onDispose {
+                    localLifecycle.lifecycle.removeObserver(observer)
+                    viewModel.onEvent(ListUiEvent.StopLocation)
+                }
             }
         }
     }
 
-    ListContent(
-        uiState = uiState,
-        onItemClick = onItemClick
-    )
+    Column(modifier = Modifier.fillMaxSize()) {
+        // Con il permesso già concesso il tasto non è più cliccabile
+        Button(
+            onClick = { permissionRequests++ },
+            enabled = !isLocationGranted,
+            modifier = Modifier.fillMaxWidth().padding(16.dp)
+        ) {
+            Icon(Icons.Default.MyLocation, contentDescription = null)
+            Text(
+                text = if (isLocationGranted) "Posizione attiva" else "Attiva posizione",
+                modifier = Modifier.padding(start = 8.dp)
+            )
+        }
+
+        ListContent(
+            uiState = uiState,
+            isLocationGranted = isLocationGranted,
+            onItemClick = onItemClick
+        )
+    }
 }
 
 @Composable
 private fun ListContent(
     uiState: ListUiState = ListUiState(),
+    isLocationGranted: Boolean = false,
     onItemClick: (SpeedCamera) -> Unit = {}
 ) {
     val items = uiState.items
     val location = uiState.location
 
+    if (!isLocationGranted) {
+        CenteredMessage("Attiva la posizione per trovare gli autovelox vicini")
+        return
+    }
     if (location == null) {
         CenteredMessage("In attesa della posizione...")
         return
