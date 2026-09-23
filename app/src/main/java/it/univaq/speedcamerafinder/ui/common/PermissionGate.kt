@@ -1,5 +1,8 @@
 package it.univaq.speedcamerafinder.ui.common
 
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,11 +17,16 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -32,8 +40,14 @@ fun PermissionGate(
         return
     }
 
-    val permissionState = rememberMultiplePermissionsState(permissions)
-    if (permissionState.allPermissionsGranted) {
+    // Diventa true dopo la prima risposta dell'utente alla richiesta di sistema
+    var alreadyAsked by rememberSaveable { mutableStateOf(false) }
+    val permissionState = rememberMultiplePermissionsState(permissions) {
+        alreadyAsked = true
+    }
+
+    // Basta un permesso: con la sola posizione approssimativa l'app funziona lo stesso
+    if (permissionState.permissions.any { it.status.isGranted }) {
         onPermissionsAllowed()
     } else {
 
@@ -42,13 +56,39 @@ fun PermissionGate(
             val isDialogVisible = remember { mutableStateOf(true) }
             if (isDialogVisible.value) {
                 PermissionDialog(
-                    title = "Permission required",
-                    message = "Permission required to show my location on map",
+                    title = "Permesso necessario",
+                    message = "Serve la posizione per trovare gli autovelox vicini",
                     onDismiss = {
                         isDialogVisible.value = false
                     },
                     onConfirm = {
                         permissionState.launchMultiplePermissionRequest()
+                    }
+                )
+            }
+
+        } else if (alreadyAsked) {
+
+            // Negato due volte: Android non mostra più la richiesta,
+            // l'utente può riattivare il permesso solo dalle impostazioni
+            val context = LocalContext.current
+            val isDialogVisible = remember { mutableStateOf(true) }
+            if (isDialogVisible.value) {
+                PermissionDialog(
+                    title = "Permesso negato",
+                    message = "Attiva la posizione dalle impostazioni dell'app",
+                    confirmText = "Impostazioni",
+                    onDismiss = {
+                        isDialogVisible.value = false
+                    },
+                    onConfirm = {
+                        isDialogVisible.value = false
+                        context.startActivity(
+                            Intent(
+                                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                Uri.fromParts("package", context.packageName, null)
+                            )
+                        )
                     }
                 )
             }
@@ -66,6 +106,7 @@ fun PermissionGate(
 fun PermissionDialog(
     title: String = "Title",
     message: String = "Message",
+    confirmText: String = "Richiedi",
     onDismiss: () -> Unit = {},
     onConfirm: () -> Unit = {},
 ) {
@@ -91,14 +132,14 @@ fun PermissionDialog(
                     OutlinedButton(
                         onClick = onDismiss,
                     ) {
-                        Text("Cancel")
+                        Text("Annulla")
                     }
 
                     Button(
                         onClick = onConfirm,
                         modifier = Modifier.padding(start = 8.dp)
                     ) {
-                        Text("Request")
+                        Text(confirmText)
                     }
                 }
             }
