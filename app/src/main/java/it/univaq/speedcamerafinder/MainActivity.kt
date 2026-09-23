@@ -14,13 +14,24 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import dagger.hilt.android.AndroidEntryPoint
 import it.univaq.speedcamerafinder.domain.model.SpeedCamera
+import it.univaq.speedcamerafinder.ui.common.LOCATION_PERMISSIONS
+import it.univaq.speedcamerafinder.ui.screen.SpeedCameraUiEvent
+import it.univaq.speedcamerafinder.ui.screen.SpeedCameraViewModel
 import it.univaq.speedcamerafinder.ui.screen.detail.ScreenDetail
 import it.univaq.speedcamerafinder.ui.screen.list.ScreenList
 import it.univaq.speedcamerafinder.ui.screen.map.ScreenMap
@@ -28,8 +39,9 @@ import it.univaq.speedcamerafinder.ui.theme.SpeedCameraFinderTheme
 
 data object ListScreen
 data object MapScreen
-data class DetailScreen(val camera: SpeedCamera)
+data class DetailScreen(val camera: SpeedCamera, val number: Int)
 
+@OptIn(ExperimentalPermissionsApi::class)
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,6 +50,32 @@ class MainActivity : ComponentActivity() {
         setContent {
             SpeedCameraFinderTheme {
                 val backStack = remember { mutableStateListOf<Any>(ListScreen) }
+
+                // Un solo ViewModel per lista e mappa
+                val viewModel: SpeedCameraViewModel = hiltViewModel()
+
+                val permissionState = rememberMultiplePermissionsState(LOCATION_PERMISSIONS)
+                val isLocationGranted = permissionState.permissions.any { it.status.isGranted }
+
+                // GPS acceso solo con il permesso concesso e l'app in primo piano
+                if (isLocationGranted) {
+                    val localLifecycle = LocalLifecycleOwner.current
+                    DisposableEffect(localLifecycle) {
+                        val observer = LifecycleEventObserver { _, event ->
+                            when(event) {
+                                Lifecycle.Event.ON_RESUME -> viewModel.onEvent(SpeedCameraUiEvent.StartLocation)
+                                Lifecycle.Event.ON_PAUSE -> viewModel.onEvent(SpeedCameraUiEvent.StopLocation)
+                                else -> {}
+                            }
+                        }
+                        localLifecycle.lifecycle.addObserver(observer)
+
+                        onDispose {
+                            localLifecycle.lifecycle.removeObserver(observer)
+                            viewModel.onEvent(SpeedCameraUiEvent.StopLocation)
+                        }
+                    }
+                }
 
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
@@ -77,21 +115,23 @@ class MainActivity : ComponentActivity() {
 
                             entry<ListScreen> {
                                 ScreenList(
-                                    onItemClick = {
-                                        backStack.add(DetailScreen(it))
+                                    viewModel = viewModel,
+                                    isLocationGranted = isLocationGranted,
+                                    onItemClick = { camera, number ->
+                                        backStack.add(DetailScreen(camera, number))
                                     }
                                 )
                             }
                             entry<MapScreen> {
                                 ScreenMap(
-                                    onItemClick = {
-                                        backStack.add(DetailScreen(it))
+                                    viewModel = viewModel,
+                                    onItemClick = { camera, number ->
+                                        backStack.add(DetailScreen(camera, number))
                                     }
                                 )
                             }
                             entry<DetailScreen> {
-                                val camera = it.camera
-                                ScreenDetail(camera)
+                                ScreenDetail(it.camera, it.number)
                             }
                         }
                     )

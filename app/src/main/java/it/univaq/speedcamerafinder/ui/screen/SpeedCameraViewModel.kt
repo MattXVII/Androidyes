@@ -1,4 +1,4 @@
-package it.univaq.speedcamerafinder.ui.screen.map
+package it.univaq.speedcamerafinder.ui.screen
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -11,30 +11,33 @@ import com.google.android.gms.maps.model.LatLng
 import dagger.hilt.android.lifecycle.HiltViewModel
 import it.univaq.speedcamerafinder.common.LocationHelper
 import it.univaq.speedcamerafinder.common.Result
+import it.univaq.speedcamerafinder.common.distanceFrom
 import it.univaq.speedcamerafinder.domain.model.SpeedCamera
 import it.univaq.speedcamerafinder.domain.usecase.GetSpeedCamerasUseCase
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-data class MapUiState (
+data class SpeedCameraUiState (
     val items: List<SpeedCamera> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
     val location: LatLng? = null
 )
 
-sealed class MapUiEvent {
-    data object StartLocation: MapUiEvent()
-    data object StopLocation: MapUiEvent()
+sealed class SpeedCameraUiEvent {
+    data object StartLocation: SpeedCameraUiEvent()
+    data object StopLocation: SpeedCameraUiEvent()
+    data object Refresh: SpeedCameraUiEvent()
 }
 
+// Unico ViewModel condiviso da lista e mappa: stessi dati, stesso ordine
 @HiltViewModel
-class MapViewModel @Inject constructor(
+class SpeedCameraViewModel @Inject constructor(
     private val getSpeedCamerasUseCase: GetSpeedCamerasUseCase,
     private val locationHelper: LocationHelper
 ): ViewModel() {
 
-    var uiState by mutableStateOf(MapUiState())
+    var uiState by mutableStateOf(SpeedCameraUiState())
         private set
 
     private val locationCallback = object : LocationCallback() {
@@ -47,10 +50,12 @@ class MapViewModel @Inject constructor(
         }
     }
 
-    fun onEvent(event: MapUiEvent) {
+    fun onEvent(event: SpeedCameraUiEvent) {
         when(event) {
-            is MapUiEvent.StartLocation -> locationHelper.start(locationCallback)
-            is MapUiEvent.StopLocation -> locationHelper.stop(locationCallback)
+            is SpeedCameraUiEvent.StartLocation -> locationHelper.start(locationCallback)
+            is SpeedCameraUiEvent.StopLocation -> locationHelper.stop(locationCallback)
+            // Riscarico gli autovelox intorno alla posizione attuale
+            is SpeedCameraUiEvent.Refresh -> uiState.location?.let { load(it.latitude, it.longitude) }
         }
     }
 
@@ -58,8 +63,12 @@ class MapViewModel @Inject constructor(
         viewModelScope.launch {
             getSpeedCamerasUseCase(lat, lng).collect {
                 uiState = when(it) {
-                    is Result.Loading -> uiState.copy(isLoading = true)
-                    is Result.Success -> uiState.copy(items = it.data, isLoading = false)
+                    is Result.Loading -> uiState.copy(isLoading = true, error = null)
+                    is Result.Success -> uiState.copy(
+                        // Dal più vicino al più lontano
+                        items = it.data.sortedBy { camera -> camera.distanceFrom(LatLng(lat, lng)) },
+                        isLoading = false
+                    )
                     is Result.Error -> uiState.copy(error = it.message, isLoading = false)
                 }
             }

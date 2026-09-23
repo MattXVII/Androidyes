@@ -11,13 +11,14 @@ import it.univaq.speedcamerafinder.domain.model.SpeedCamera
 
 @Composable
 fun ScreenDetail(
-    camera: SpeedCamera
+    camera: SpeedCamera,
+    number: Int
 ) {
     Column(
         modifier = Modifier.padding(16.dp)
     ) {
         Text(
-            text = "Autovelox",
+            text = "Autovelox $number",
             style = typography.titleLarge
         )
         Text(

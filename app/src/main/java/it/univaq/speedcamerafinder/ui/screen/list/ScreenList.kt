@@ -1,6 +1,5 @@
 package it.univaq.speedcamerafinder.ui.screen.list
 
-import android.Manifest
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,7 +18,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
@@ -29,55 +27,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.isGranted
-import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import it.univaq.speedcamerafinder.common.distanceFrom
 import it.univaq.speedcamerafinder.domain.model.SpeedCamera
+import it.univaq.speedcamerafinder.ui.common.LOCATION_PERMISSIONS
 import it.univaq.speedcamerafinder.ui.common.PermissionGate
+import it.univaq.speedcamerafinder.ui.screen.SpeedCameraUiEvent
+import it.univaq.speedcamerafinder.ui.screen.SpeedCameraUiState
+import it.univaq.speedcamerafinder.ui.screen.SpeedCameraViewModel
 
-private val LOCATION_PERMISSIONS = listOf(
-    Manifest.permission.ACCESS_FINE_LOCATION,
-    Manifest.permission.ACCESS_COARSE_LOCATION
-)
-
-@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun ScreenList(
-    viewModel: ListViewModel = hiltViewModel(),
-    onItemClick: (SpeedCamera) -> Unit = {}
+    viewModel: SpeedCameraViewModel,
+    isLocationGranted: Boolean,
+    onItemClick: (SpeedCamera, Int) -> Unit = { _, _ -> }
 ) {
     val uiState = viewModel.uiState
-    val permissionState = rememberMultiplePermissionsState(LOCATION_PERMISSIONS)
-    val isLocationGranted = permissionState.permissions.any { it.status.isGranted }
 
     // Ogni click sul tasto ricrea PermissionGate, che quindi rifà la richiesta
     var permissionRequests by rememberSaveable { mutableIntStateOf(0) }
-
     key(permissionRequests) {
-        PermissionGate(permissions = LOCATION_PERMISSIONS) {
-            val localLifecycle = LocalLifecycleOwner.current
-            DisposableEffect(localLifecycle) {
-                val observer = LifecycleEventObserver { _, event ->
-                    when(event) {
-                        Lifecycle.Event.ON_RESUME -> viewModel.onEvent(ListUiEvent.StartLocation)
-                        Lifecycle.Event.ON_PAUSE -> viewModel.onEvent(ListUiEvent.StopLocation)
-                        else -> {}
-                    }
-                }
-                localLifecycle.lifecycle.addObserver(observer)
-
-                // Quando si cambia schermata fermo anche il GPS
-                onDispose {
-                    localLifecycle.lifecycle.removeObserver(observer)
-                    viewModel.onEvent(ListUiEvent.StopLocation)
-                }
-            }
-        }
+        PermissionGate(permissions = LOCATION_PERMISSIONS)
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -99,7 +68,7 @@ fun ScreenList(
             }
 
             Button(
-                onClick = { viewModel.onEvent(ListUiEvent.Refresh) },
+                onClick = { viewModel.onEvent(SpeedCameraUiEvent.Refresh) },
                 enabled = uiState.location != null && !uiState.isLoading,
                 modifier = Modifier.weight(1f)
             ) {
@@ -121,9 +90,9 @@ fun ScreenList(
 
 @Composable
 private fun ListContent(
-    uiState: ListUiState = ListUiState(),
+    uiState: SpeedCameraUiState = SpeedCameraUiState(),
     isLocationGranted: Boolean = false,
-    onItemClick: (SpeedCamera) -> Unit = {}
+    onItemClick: (SpeedCamera, Int) -> Unit = { _, _ -> }
 ) {
     val items = uiState.items
     val location = uiState.location
@@ -163,12 +132,15 @@ private fun ListContent(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(items.size) { index ->
+            // Numero = posizione nella lista (dal più vicino): è lo stesso usato sulla mappa
+            val number = index + 1
             val km = items[index].distanceFrom(location) / 1000
+            val limit = items[index].maxSpeed?.let { "Limite $it km/h" } ?: "Limite non indicato"
             ListItem(
-                title = items[index].maxSpeed?.let { "Limite $it km/h" } ?: "Limite non indicato",
-                subtitle = "A %.1f km da te".format(km),
+                title = "Autovelox $number",
+                subtitle = "$limit · a %.1f km da te".format(km),
                 onItemClick = {
-                    onItemClick(items[index])
+                    onItemClick(items[index], number)
                 }
             )
         }
