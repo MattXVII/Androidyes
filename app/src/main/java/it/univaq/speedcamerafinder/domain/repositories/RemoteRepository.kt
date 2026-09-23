@@ -4,5 +4,5 @@ import it.univaq.speedcamerafinder.domain.model.SpeedCamera
 
 interface RemoteRepository {
 
-    suspend fun downloadData(): List<SpeedCamera>
+    suspend fun downloadData(lat: Double, lng: Double, radius: Int): List<SpeedCamera>
 }

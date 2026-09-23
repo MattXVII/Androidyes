@@ -8,6 +8,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
+// Posizione fissa (L'Aquila) finché lo Step 4-5 non passa quella dell'utente
+private const val TEST_LAT = 42.35
+private const val TEST_LNG = 13.40
+private const val RADIUS_METERS = 20_000
+
 class GetSpeedCamerasUseCase @Inject constructor(
     private val remoteRepository: RemoteRepository,
     private val localRepository: LocalRepository
@@ -20,7 +25,7 @@ class GetSpeedCamerasUseCase @Inject constructor(
         runCatching {
             var localData = localRepository.getAll()
             if (localData.isEmpty()) {
-                val remoteData = remoteRepository.downloadData()
+                val remoteData = remoteRepository.downloadData(TEST_LAT, TEST_LNG, RADIUS_METERS)
                 localRepository.save(remoteData)
 
                 localData = localRepository.getAll()
