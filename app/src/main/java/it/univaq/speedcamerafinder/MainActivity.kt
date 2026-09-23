@@ -50,9 +50,9 @@ class MainActivity : ComponentActivity() {
                                         backStack.add(ListScreen)
                                 },
                                 icon = {
-                                    Icon(Icons.Default.Home, contentDescription = "List")
+                                    Icon(Icons.Default.Home, contentDescription = "Lista")
                                 },
-                                label = { Text("List") }
+                                label = { Text("Lista") }
                             )
 
                             NavigationBarItem(
@@ -62,9 +62,9 @@ class MainActivity : ComponentActivity() {
                                         backStack.add(MapScreen)
                                 },
                                 icon = {
-                                    Icon(Icons.Default.Place, contentDescription = "Map")
+                                    Icon(Icons.Default.Place, contentDescription = "Mappa")
                                 },
-                                label = { Text("Map") }
+                                label = { Text("Mappa") }
                             )
                         }
                     }

@@ -4,16 +4,18 @@ import android.Manifest
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberUpdatedMarkerState
 import it.univaq.speedcamerafinder.domain.model.SpeedCamera
 import it.univaq.speedcamerafinder.ui.common.PermissionGate
@@ -24,9 +26,18 @@ fun ScreenMap(
     viewModel: MapViewModel = hiltViewModel()
 ) {
     val uiState = viewModel.uiState
+    val cameraPositionState = rememberCameraPositionState()
+
+    // Quando arriva la posizione centro la mappa sull'utente
+    LaunchedEffect(uiState.location != null) {
+        uiState.location?.let {
+            cameraPositionState.position = CameraPosition.fromLatLngZoom(it, 12f)
+        }
+    }
 
     GoogleMap (
         modifier = Modifier.fillMaxSize(),
+        cameraPositionState = cameraPositionState
     ){
         uiState.items.forEach { camera ->
             Marker(
@@ -66,7 +77,7 @@ fun ScreenMap(
             uiState.location?.let {
                 Marker(
                     state = rememberUpdatedMarkerState(it),
-                    title = "My location",
+                    title = "La mia posizione",
                     icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
                 )
             }

@@ -33,5 +33,10 @@ fun ScreenDetail(
             text = "ID OpenStreetMap: ${camera.id}",
             style = typography.bodySmall
         )
+        // Attribuzione richiesta dalla licenza ODbL dei dati OpenStreetMap
+        Text(
+            text = "Dati © OpenStreetMap contributors",
+            style = typography.bodySmall
+        )
     }
 }
