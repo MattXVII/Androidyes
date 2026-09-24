@@ -1,9 +1,9 @@
 package it.univaq.speedcamerafinder.ui.screen.list
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.typography
@@ -31,6 +32,7 @@ import it.univaq.speedcamerafinder.common.distanceFrom
 import it.univaq.speedcamerafinder.domain.model.SpeedCamera
 import it.univaq.speedcamerafinder.ui.common.LOCATION_PERMISSIONS
 import it.univaq.speedcamerafinder.ui.common.PermissionGate
+import it.univaq.speedcamerafinder.ui.common.SpeedLimitSign
 import it.univaq.speedcamerafinder.ui.screen.SpeedCameraUiEvent
 import it.univaq.speedcamerafinder.ui.screen.SpeedCameraUiState
 import it.univaq.speedcamerafinder.ui.screen.SpeedCameraViewModel
@@ -138,16 +140,17 @@ private fun ListContent(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(items.size) { index ->
             // Numero = posizione nella lista (dal più vicino): è lo stesso usato sulla mappa
             val number = index + 1
             val km = items[index].distanceFrom(location) / 1000
-            val limit = items[index].maxSpeed?.let { "Limite $it km/h" } ?: "Limite non indicato"
             ListItem(
                 title = "Autovelox $number",
-                subtitle = "$limit · a %.1f km da te".format(km),
+                subtitle = "A %.1f km da te".format(km),
+                maxSpeed = items[index].maxSpeed,
                 onItemClick = {
                     onItemClick(items[index], number)
                 }
@@ -169,25 +172,33 @@ private fun CenteredMessage(text: String) {
 @Preview
 @Composable
 private fun ListItem(
-    title: String = "Title",
-    subtitle: String = "Subtitle",
+    title: String = "Autovelox 1",
+    subtitle: String = "A 1.2 km da te",
+    maxSpeed: Int? = 50,
     onItemClick: () -> Unit = {}
 ) {
-    Column(
-        modifier = Modifier.fillMaxWidth()
-            .clickable(onClick = onItemClick)
-            .padding(16.dp),
+    Card(
+        onClick = onItemClick,
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
     ) {
-        Text(
-            text = title,
-            modifier = Modifier.fillMaxWidth(),
-            style = typography.titleMedium
-        )
-        Text(
-            text = subtitle,
-            modifier = Modifier.fillMaxWidth(),
-            style = typography.bodyMedium
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            SpeedLimitSign(maxSpeed)
+            Column(
+                modifier = Modifier.padding(start = 16.dp)
+            ) {
+                Text(
+                    text = title,
+                    style = typography.titleMedium
+                )
+                Text(
+                    text = subtitle,
+                    style = typography.bodyMedium
+                )
+            }
+        }
     }
 }
 

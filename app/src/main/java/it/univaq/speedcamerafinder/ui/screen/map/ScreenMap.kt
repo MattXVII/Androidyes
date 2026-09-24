@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -44,6 +45,7 @@ fun ScreenMap(
                 state = rememberUpdatedMarkerState(LatLng(camera.lat, camera.lng)),
                 title = "Autovelox $number",
                 snippet = camera.maxSpeed?.let { "Limite $it km/h" },
+                icon = markerColor(camera.maxSpeed),
                 onInfoWindowClick = {
                     onItemClick(camera, number)
                 }
@@ -59,3 +61,13 @@ fun ScreenMap(
         }
     }
 }
+
+// Colore del marker in base al limite: città, strade extraurbane, superstrade e autostrade
+fun markerColor(maxSpeed: Int?): BitmapDescriptor = BitmapDescriptorFactory.defaultMarker(
+    when {
+        maxSpeed == null -> BitmapDescriptorFactory.HUE_AZURE
+        maxSpeed <= 50 -> BitmapDescriptorFactory.HUE_RED
+        maxSpeed <= 90 -> BitmapDescriptorFactory.HUE_ORANGE
+        else -> BitmapDescriptorFactory.HUE_YELLOW
+    }
+)
