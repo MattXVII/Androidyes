@@ -83,9 +83,10 @@ class MainActivity : ComponentActivity() {
                         NavigationBar {
                             NavigationBarItem(
                                 selected = backStack.lastOrNull() is ListScreen,
+                                // Svuoto il back stack: premendo più volte le tab non si accumulano schermate
                                 onClick = {
-                                    if (backStack.lastOrNull() !is ListScreen)
-                                        backStack.add(ListScreen)
+                                    backStack.clear()
+                                    backStack.add(ListScreen)
                                 },
                                 icon = {
                                     Icon(Icons.Default.Home, contentDescription = "Lista")
@@ -95,9 +96,11 @@ class MainActivity : ComponentActivity() {
 
                             NavigationBarItem(
                                 selected = backStack.lastOrNull() is MapScreen,
+                                // Dalla mappa il tasto indietro riporta alla lista
                                 onClick = {
-                                    if (backStack.lastOrNull() !is MapScreen)
-                                        backStack.add(MapScreen)
+                                    backStack.clear()
+                                    backStack.add(ListScreen)
+                                    backStack.add(MapScreen)
                                 },
                                 icon = {
                                     Icon(Icons.Default.Place, contentDescription = "Mappa")

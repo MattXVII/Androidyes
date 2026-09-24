@@ -105,7 +105,7 @@ private fun ListContent(
         CenteredMessage("In attesa della posizione...")
         return
     }
-    if (uiState.isLoading) {
+    if (uiState.isLoading && items.isEmpty()) {
         CenteredMessage("Caricamento...")
         return
     }
@@ -116,6 +116,15 @@ private fun ListContent(
     if (items.isEmpty()) {
         CenteredMessage("Nessun autovelox nelle vicinanze")
         return
+    }
+
+    // Aggiornamento in corso: intanto lascio visibili gli autovelox già caricati
+    if (uiState.isLoading) {
+        Text(
+            text = "I dati si stanno aggiornando, attendi...",
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
     }
 
     // Download fallito ma ci sono i dati salvati in Room: li mostro avvisando l'utente

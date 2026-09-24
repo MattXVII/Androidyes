@@ -1,6 +1,8 @@
 package it.univaq.speedcamerafinder.domain.usecase
 
+import com.google.android.gms.maps.model.LatLng
 import it.univaq.speedcamerafinder.common.Result
+import it.univaq.speedcamerafinder.common.distanceFrom
 import it.univaq.speedcamerafinder.domain.model.SpeedCamera
 import it.univaq.speedcamerafinder.domain.repositories.LocalRepository
 import it.univaq.speedcamerafinder.domain.repositories.RemoteRepository
@@ -24,8 +26,10 @@ class GetSpeedCamerasUseCase @Inject constructor(
             localRepository.save(remoteData)
         }
 
-        // Se la rete non risponde mostro comunque gli ultimi autovelox salvati in Room
+        // Se la rete non risponde mostro comunque gli ultimi autovelox salvati in Room,
+        // ma solo quelli entro il raggio: la cache potrebbe essere di un'altra zona
         val localData = localRepository.getAll()
+            .filter { it.distanceFrom(LatLng(lat, lng)) <= RADIUS_METERS }
         if (download.isSuccess || localData.isNotEmpty()) {
             emit(Result.Success(localData))
         }
