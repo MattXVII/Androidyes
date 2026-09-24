@@ -2,10 +2,14 @@ package it.univaq.speedcamerafinder.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+// Colori dei cartelli stradali: blu, grigio asfalto e rosso
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+val RoadBlue80 = Color(0xFF90CAF9)
+val RoadGrey80 = Color(0xFFB0BEC5)
+val SignRed80 = Color(0xFFEF9A9A)
+val RoadGreyDark = Color(0xFF37474F)
+
+val RoadBlue40 = Color(0xFF1565C0)
+val RoadGrey40 = Color(0xFF546E7A)
+val SignRed40 = Color(0xFFC62828)
+val RoadBlueLight = Color(0xFFD6E4F5)
